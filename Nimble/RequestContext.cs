@@ -75,7 +75,7 @@ namespace Nimble
 		{
 			if (!RouteVariableIs("id", type))
 			{
-				app.routeVariableValidationFailure?.Invoke(this, key, type);
+				app.onRouteVariableValidationFailure?.Invoke(this, key, type);
 				return false;
 			}
 			return true;

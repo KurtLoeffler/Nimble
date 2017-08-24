@@ -20,7 +20,7 @@ namespace NimbleTest
 				{
 					Console.WriteLine(context.request.Url.AbsolutePath);
 				},
-				routeVariableValidationFailure = (context, key, type) =>
+				onRouteVariableValidationFailure = (context, key, type) =>
 				{
 					context.statusCode = System.Net.HttpStatusCode.BadRequest;
 					context.Write(JsonConvert.SerializeObject(new { error = $"{{{key}}} (\"{context.GetRouteVariable(key)}\") is not convertable to {type}." }));

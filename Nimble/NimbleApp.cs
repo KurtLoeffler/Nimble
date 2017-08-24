@@ -11,8 +11,8 @@ namespace Nimble
 		public NimbleServer server { get; protected set; }
 		public List<Router> routers { get; private set; } = new List<Router>();
 
-		public delegate void RouteVariableValidationFailureDelegate(RequestContext context, string key, Type type);
-		public RouteVariableValidationFailureDelegate routeVariableValidationFailure { get; set; }
+		public delegate void OnRouteVariableValidationFailureDelegate(RequestContext context, string key, Type type);
+		public OnRouteVariableValidationFailureDelegate onRouteVariableValidationFailure { get; set; }
 
 		public delegate void OnRequestDelegate(RequestContext context);
 		public OnRequestDelegate onInitializeRequest { get; set; }
