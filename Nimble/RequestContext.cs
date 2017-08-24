@@ -66,19 +66,17 @@ namespace Nimble
 			response.AddHeader("Date", DateTime.Now.ToString("r"));
 		}
 
-		public bool ValidateRouteVariableType<T>(string key)
+		public void ValidateRouteVariableType<T>(string key)
 		{
-			return ValidateRouteVariableType(key, typeof(T));
+			ValidateRouteVariableType(key, typeof(T));
 		}
 
-		public bool ValidateRouteVariableType(string key, Type type)
+		public void ValidateRouteVariableType(string key, Type type)
 		{
 			if (!RouteVariableIs("id", type))
 			{
-				app.onRouteVariableValidationFailure?.Invoke(this, key, type);
-				return false;
+				throw new RouteVariableValidationException(this, key, type);
 			}
-			return true;
 		}
 
 		public T GetRouteVariable<T>(string key)
@@ -139,6 +137,12 @@ namespace Nimble
 			{
 				routeVariables[key] = value.ToString();
 			}
+		}
+
+		public void Clear()
+		{
+			responseStream.Position = 0;
+			responseStream.SetLength(0);
 		}
 
 		public void Write(string text)

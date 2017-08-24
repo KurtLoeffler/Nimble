@@ -11,8 +11,8 @@ namespace Nimble
 		public NimbleServer server { get; protected set; }
 		public List<Router> routers { get; private set; } = new List<Router>();
 
-		public delegate void OnRouteVariableValidationFailureDelegate(RequestContext context, string key, Type type);
-		public OnRouteVariableValidationFailureDelegate onRouteVariableValidationFailure { get; set; }
+		public delegate void OnRouteVariableValidationExceptionDelegate(RouteVariableValidationException exception);
+		public OnRouteVariableValidationExceptionDelegate onRouteVariableValidationException { get; set; }
 
 		public delegate void OnRequestDelegate(RequestContext context);
 		public OnRequestDelegate onInitializeRequest { get; set; }
@@ -34,6 +34,16 @@ namespace Nimble
 			server.onHttpRequest += OnHttpRequest;
 		}
 
+		public void Start()
+		{
+			server.Start();
+		}
+
+		public void Stop()
+		{
+			server.Stop();
+		}
+
 		private void OnHttpRequest(RequestContext context)
 		{
 			context.app = this;
@@ -44,11 +54,25 @@ namespace Nimble
 
 			onInitializeRequest?.Invoke(context);
 
-			foreach (var router in routers)
+			try
 			{
-				if (router.Evaluate(context))
+				foreach (var router in routers)
 				{
-					break;
+					if (router.Evaluate(context))
+					{
+						break;
+					}
+				}
+			}
+			catch (RouteVariableValidationException exception)
+			{
+				if (onRouteVariableValidationException != null)
+				{
+					onRouteVariableValidationException?.Invoke(exception);
+				}
+				else
+				{
+					Console.WriteLine(exception);
 				}
 			}
 

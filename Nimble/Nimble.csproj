@@ -36,6 +36,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RouteVariableValidationException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NimbleServer.cs" />
     <Compile Include="RequestContext.cs" />

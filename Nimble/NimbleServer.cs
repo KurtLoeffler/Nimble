@@ -19,6 +19,14 @@ namespace Nimble
 		public string domainPattern { get; private set; }
 		public int port { get; private set; }
 
+		public bool isStarted
+		{
+			get
+			{
+				return listenThread != null;
+			}
+		}
+
 		private Thread listenThread;
 		private HttpListener httpListener;
 
@@ -26,6 +34,14 @@ namespace Nimble
 		{
 			this.domainPattern = domainPattern;
 			this.port = port;
+		}
+
+		public void Start()
+		{
+			if (isStarted)
+			{
+				throw new Exception($"{nameof(NimbleServer)} already started.");
+			}
 
 			listenThread = new Thread(Listen);
 			listenThread.IsBackground = true;
@@ -34,8 +50,15 @@ namespace Nimble
 
 		public void Stop()
 		{
+			if (!isStarted)
+			{
+				throw new Exception($"{nameof(NimbleServer)} is not started.");
+			}
+
 			listenThread.Abort();
+			listenThread = null;
 			httpListener.Stop();
+			httpListener = null;
 			onStop?.Invoke();
 		}
 

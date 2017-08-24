@@ -20,10 +20,11 @@ namespace NimbleTest
 				{
 					Console.WriteLine(context.request.Url.AbsolutePath);
 				},
-				onRouteVariableValidationFailure = (context, key, type) =>
+				onRouteVariableValidationException = (exception) =>
 				{
-					context.statusCode = System.Net.HttpStatusCode.BadRequest;
-					context.Write(JsonConvert.SerializeObject(new { error = $"{{{key}}} (\"{context.GetRouteVariable(key)}\") is not convertable to {type}." }));
+					exception.context.statusCode = System.Net.HttpStatusCode.BadRequest;
+					exception.context.Clear();
+					exception.context.Write(JsonConvert.SerializeObject(new { error = exception.Message }));
 				}
 			};
 
@@ -41,10 +42,7 @@ namespace NimbleTest
 			{
 				onExecute = (context) =>
 				{
-					if (!context.ValidateRouteVariableType<int>("id"))
-					{
-						return;
-					}
+					context.ValidateRouteVariableType<int>("id");
 
 					int id = context.GetRouteVariable<int>("id");
 
@@ -59,6 +57,8 @@ namespace NimbleTest
 				}
 			};
 			app.routers.Add(idRoute);
+
+			app.Start();
 
 			while (true)
 			{
