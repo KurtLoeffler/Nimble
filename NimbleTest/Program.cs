@@ -16,6 +16,10 @@ namespace NimbleTest
 			NimbleApp app = new NimbleApp(80)
 			{
 				defaultContentType = "application/json",
+				onInitializeRequest = (context) =>
+				{
+					Console.WriteLine(context.request.Url.AbsolutePath);
+				},
 				routeVariableValidationFailure = (context, key, type) =>
 				{
 					context.statusCode = System.Net.HttpStatusCode.BadRequest;

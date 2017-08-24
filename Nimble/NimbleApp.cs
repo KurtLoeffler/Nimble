@@ -14,6 +14,10 @@ namespace Nimble
 		public delegate void RouteVariableValidationFailureDelegate(RequestContext context, string key, Type type);
 		public RouteVariableValidationFailureDelegate routeVariableValidationFailure { get; set; }
 
+		public delegate void OnRequestDelegate(RequestContext context);
+		public OnRequestDelegate onInitializeRequest { get; set; }
+		public OnRequestDelegate onFinalizeRequest { get; set; }
+
 		public string defaultContentType { get; set; }
 
 		private int tempPort;
@@ -38,6 +42,8 @@ namespace Nimble
 				context.response.ContentType = defaultContentType;
 			}
 
+			onInitializeRequest?.Invoke(context);
+
 			foreach (var router in routers)
 			{
 				if (router.Evaluate(context))
@@ -45,6 +51,8 @@ namespace Nimble
 					break;
 				}
 			}
+
+			onFinalizeRequest?.Invoke(context);
 		}
 	}
 }
