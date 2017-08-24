@@ -10,7 +10,7 @@ namespace Nimble
 {
 	public class NimbleServer
 	{
-		public delegate void OnHttpRequestDelegate(RequestContext context);
+		public delegate void OnHttpRequestDelegate(HttpListenerContext context);
 		public event OnHttpRequestDelegate onHttpRequest;
 
 		public delegate void OnStopDelegate();
@@ -71,12 +71,10 @@ namespace Nimble
 			while (true)
 			{
 				HttpListenerContext context = httpListener.GetContext();
-				RequestContext requestContext = new RequestContext(context);
 
 				Task.Run(() => {
-					onHttpRequest?.Invoke(requestContext);
-					requestContext.Commit();
-					requestContext.response.Close();
+					onHttpRequest?.Invoke(context);
+					context.Response.Close();
 				});
 			}
 		}

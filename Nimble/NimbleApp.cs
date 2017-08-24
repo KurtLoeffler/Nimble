@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -44,14 +45,10 @@ namespace Nimble
 			server.Stop();
 		}
 
-		private void OnHttpRequest(RequestContext context)
+		private void OnHttpRequest(HttpListenerContext httpListenerContext)
 		{
-			context.app = this;
-			if (defaultContentType != null)
-			{
-				context.response.ContentType = defaultContentType;
-			}
-
+			RequestContext context = new RequestContext(this, httpListenerContext);
+			
 			onInitializeRequest?.Invoke(context);
 
 			try
@@ -77,6 +74,8 @@ namespace Nimble
 			}
 
 			onFinalizeRequest?.Invoke(context);
+
+			context.Commit();
 		}
 	}
 }

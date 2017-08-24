@@ -13,6 +13,18 @@ namespace NimbleTest
 	{
 		static void Main(string[] args)
 		{
+			for (int i = 0; i < args.Length; i++)
+			{
+				string arg = args[i];
+				if (arg == "-path" && i < args.Length-1)
+				{
+					Environment.CurrentDirectory = args[i+1];
+					i++;
+				}
+			}
+
+			Console.WriteLine($"Running server in \"{Environment.CurrentDirectory}\"");
+
 			NimbleApp app = new NimbleApp(80)
 			{
 				defaultContentType = "application/json",
@@ -37,13 +49,20 @@ namespace NimbleTest
 				}
 			};
 			app.routers.Add(rootRoute);
+			
+			var faviconRoute = new Router("/favicon.ico")
+			{
+				onExecute = (context) =>
+				{
+					context.ServeStaticFile(context.request.Url.AbsolutePath);
+				}
+			};
+			app.routers.Add(faviconRoute);
 
 			var idRoute = new Router("/{id}")
 			{
 				onExecute = (context) =>
 				{
-					context.ValidateRouteVariableType<int>("id");
-
 					int id = context.GetRouteVariable<int>("id");
 
 					var myPacket = new

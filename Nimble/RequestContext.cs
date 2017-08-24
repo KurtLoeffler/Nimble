@@ -10,7 +10,8 @@ namespace Nimble
 {
 	public class RequestContext
 	{
-		public NimbleApp app { get; internal set; }
+		public NimbleApp app { get; private set; }
+		public bool hasBeenCommitted { get; private set; }
 
 		/// <summary>
 		/// The internal <see cref="HttpListenerContext"/> for this request.
@@ -58,44 +59,18 @@ namespace Nimble
 
 		public Dictionary<string, string> routeVariables { get; private set; } = new Dictionary<string, string>();
 
-		public RequestContext(HttpListenerContext httpContext)
+		public RequestContext(NimbleApp app, HttpListenerContext httpContext)
 		{
+			this.app = app;
 			this.httpContext = httpContext;
+
+			if (app.defaultContentType != null)
+			{
+				response.ContentType = app.defaultContentType;
+			}
 
 			statusCode = HttpStatusCode.OK;
 			response.AddHeader("Date", DateTime.Now.ToString("r"));
-		}
-
-		public void ValidateRouteVariableType<T>(string key)
-		{
-			ValidateRouteVariableType(key, typeof(T));
-		}
-
-		public void ValidateRouteVariableType(string key, Type type)
-		{
-			if (!RouteVariableIs("id", type))
-			{
-				throw new RouteVariableValidationException(this, key, type);
-			}
-		}
-
-		public T GetRouteVariable<T>(string key)
-		{
-			string valueString = GetRouteVariable(key);
-			if (valueString == null)
-			{
-				return default;
-			}
-			T value = default;
-			try
-			{
-				value = (T)Convert.ChangeType(valueString, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
-			}
-			catch (Exception)
-			{
-
-			}
-			return value;
 		}
 
 		public bool RouteVariableIs<T>(string key)
@@ -119,6 +94,25 @@ namespace Nimble
 			{
 				return false;
 			}
+		}
+
+		public T GetRouteVariable<T>(string key)
+		{
+			string valueString = GetRouteVariable(key);
+			if (valueString == null)
+			{
+				return default;
+			}
+			T value = default;
+			try
+			{
+				value = (T)Convert.ChangeType(valueString, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
+			}
+			catch (Exception)
+			{
+				throw new RouteVariableValidationException(this, key, typeof(T));
+			}
+			return value;
 		}
 
 		public string GetRouteVariable(string key)
@@ -165,6 +159,11 @@ namespace Nimble
 
 		public void Commit()
 		{
+			if (hasBeenCommitted)
+			{
+				return;
+			}
+			hasBeenCommitted = true;
 			response.ContentLength64 += responseStream.Length;
 			responseStream.WriteTo(response.OutputStream);
 			response.OutputStream.Flush();
@@ -185,43 +184,63 @@ namespace Nimble
 			}
 		}
 
-		public void ServeStaticFile()
+		public void ServeStaticFile(string filePath, string cacheControl = null)
 		{
-			ServeStaticFile(StaticFileSettings.defaultSettings);
+			ServeStaticFile(filePath, StaticFileSettings.defaultSettings, cacheControl);
 		}
 
-		public void ServeStaticFile(StaticFileSettings staticFileSettings)
+		void ServeStaticFile(string filePath, StaticFileSettings staticFileSettings, string cacheControl = null)
 		{
-			string filename = request.Url.AbsolutePath;
-			//Console.WriteLine(filename);
-			filename = filename.Substring(1);
-
-			if (string.IsNullOrEmpty(filename))
+			hasBeenCommitted = true;
+			if (filePath.StartsWith("/"))
 			{
-				foreach (string indexFile in staticFileSettings.indexFiles)
+				filePath = filePath.Substring(1);
+			}
+
+			string fullAppPath = Path.GetFullPath(Environment.CurrentDirectory);
+			string fullPath = Path.GetFullPath(filePath);
+			if (!fullPath.StartsWith(fullAppPath))
+			{
+				Console.WriteLine($"Path is outside of server root \"{filePath}\"");
+				Console.WriteLine(fullAppPath);
+				Console.WriteLine(fullPath);
+				statusCode = HttpStatusCode.NotFound;
+				return;
+			}
+
+			string filename = Path.GetFileName(filePath);
+			
+			if (File.Exists(filePath))
+			{
+				using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
 				{
-					if (File.Exists(indexFile))
+					response.ContentLength64 = stream.Length;
+					response.SendChunked = false;
+					response.ContentType = staticFileSettings.GetContentTypeForExtension(Path.GetExtension(filePath));
+					if (!string.IsNullOrEmpty(cacheControl))
 					{
-						filename = indexFile;
-						break;
+						response.AddHeader("cache-control", cacheControl);
+					}
+					response.AddHeader("Content-disposition", $"attachment; filename={filename}");
+					
+					byte[] buffer = new byte[64 * 1024];
+					int read;
+					using (BinaryWriter binaryWriter = new BinaryWriter(response.OutputStream))
+					{
+						while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+						{
+							binaryWriter.Write(buffer, 0, read);
+							binaryWriter.Flush();
+						}
 					}
 				}
 			}
-
-			if (File.Exists(filename))
-			{
-				response.ContentType = staticFileSettings.GetContentTypeForExtension(Path.GetExtension(filename));
-
-				byte[] input = File.ReadAllBytes(filename);
-
-				Write(input);
-
-				response.AddHeader("Last-Modified", File.GetLastWriteTime(filename).ToString("r"));
-			}
 			else
 			{
-				response.StatusCode = (int)HttpStatusCode.NotFound;
+				statusCode = HttpStatusCode.NotFound;
 			}
+
+			response.OutputStream.Close();
 		}
 	}
 }
