@@ -23,11 +23,11 @@ namespace Nimble
 		{
 			get
 			{
-				return listenThread != null;
+				return cancellationTokenSource != null;
 			}
 		}
-
-		private Thread listenThread;
+		
+		private CancellationTokenSource cancellationTokenSource;
 		private HttpListener httpListener;
 
 		public NimbleServer(string domainPattern, int port)
@@ -42,10 +42,8 @@ namespace Nimble
 			{
 				throw new Exception($"{nameof(NimbleServer)} already started.");
 			}
-
-			listenThread = new Thread(Listen);
-			listenThread.IsBackground = true;
-			listenThread.Start();
+			cancellationTokenSource = new CancellationTokenSource();
+			Task.Run(() => Listen(cancellationTokenSource.Token), cancellationTokenSource.Token);
 		}
 
 		public void Stop()
@@ -55,14 +53,15 @@ namespace Nimble
 				throw new Exception($"{nameof(NimbleServer)} is not started.");
 			}
 
-			listenThread.Abort();
-			listenThread = null;
+			cancellationTokenSource.Cancel();
 			httpListener.Stop();
 			httpListener = null;
+			cancellationTokenSource = null;
+
 			onStop?.Invoke();
 		}
 
-		private void Listen()
+		private void Listen(CancellationToken cancellationToken)
 		{
 			httpListener = new HttpListener();
 			httpListener.Prefixes.Add($"http://{domainPattern}:{port.ToString()}/");
@@ -70,12 +69,24 @@ namespace Nimble
 
 			while (true)
 			{
-				HttpListenerContext context = httpListener.GetContext();
+				try
+				{
+					HttpListenerContext context = httpListener.GetContext();
 
-				Task.Run(() => {
-					onHttpRequest?.Invoke(context);
-					context.Response.Close();
-				});
+					Task.Run(() => {
+						onHttpRequest?.Invoke(context);
+						context.Response.Close();
+					});
+				}
+				catch (HttpListenerException)
+				{
+
+				}
+
+				if (cancellationToken.IsCancellationRequested)
+				{
+					break;
+				}
 			}
 		}
 	}
