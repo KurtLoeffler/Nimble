@@ -122,6 +122,7 @@ namespace Nimble
 				if (!isFullMatch)
 				{
 					string remainingPath = path.Substring(match.Length);
+
 					foreach (var subRouter in subRouters)
 					{
 						bool result = subRouter.Evaluate(context, remainingPath);
