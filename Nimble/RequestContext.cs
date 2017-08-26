@@ -12,6 +12,8 @@ namespace Nimble
 	{
 		public NimbleApp app { get; private set; }
 		public bool hasBeenCommitted { get; private set; }
+		
+		public Router currentRouter { get; internal set; }
 
 		/// <summary>
 		/// The internal <see cref="HttpListenerContext"/> for this request.

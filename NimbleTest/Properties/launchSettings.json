@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "NimbleTest": {
+      "commandName": "Project",
+      "commandLineArgs": "-path \"ServerFiles\""
+    }
+  }
+}

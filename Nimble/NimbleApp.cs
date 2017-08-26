@@ -10,10 +10,7 @@ namespace Nimble
 	public class NimbleApp
 	{
 		public NimbleServer server { get; protected set; }
-		public List<Router> routers { get; private set; } = new List<Router>();
-
-		public delegate void OnRouteVariableValidationExceptionDelegate(RouteVariableValidationException exception);
-		public OnRouteVariableValidationExceptionDelegate onRouteVariableValidationException { get; set; }
+		public Router rootRouter { get; set; }
 
 		public delegate void OnRequestDelegate(RequestContext context);
 		public OnRequestDelegate onInitializeRequest { get; set; }
@@ -51,26 +48,10 @@ namespace Nimble
 			
 			onInitializeRequest?.Invoke(context);
 
-			try
+			if (rootRouter != null)
 			{
-				foreach (var router in routers)
-				{
-					if (router.Evaluate(context))
-					{
-						break;
-					}
-				}
-			}
-			catch (RouteVariableValidationException exception)
-			{
-				if (onRouteVariableValidationException != null)
-				{
-					onRouteVariableValidationException?.Invoke(exception);
-				}
-				else
-				{
-					Console.WriteLine(exception);
-				}
+				string path = context.request.Url.AbsolutePath;
+				rootRouter.Evaluate(context, path);
 			}
 
 			onFinalizeRequest?.Invoke(context);

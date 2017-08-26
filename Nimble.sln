@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NimbleTest", "NimbleTest\NimbleTest.csproj", "{A758F509-0620-4F4F-9EB7-6F4E66555C3B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nimble", "Nimble\Nimble.csproj", "{3808E6E7-BAD5-4C11-A6B2-8B958D42E084}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nimble", "Nimble\Nimble.csproj", "{3808E6E7-BAD5-4C11-A6B2-8B958D42E084}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NimbleTest", "NimbleTest\NimbleTest.csproj", "{D35ECA4F-FC15-4538-9525-ADD034538A9B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,14 +15,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A758F509-0620-4F4F-9EB7-6F4E66555C3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A758F509-0620-4F4F-9EB7-6F4E66555C3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A758F509-0620-4F4F-9EB7-6F4E66555C3B}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{A758F509-0620-4F4F-9EB7-6F4E66555C3B}.Debug|x86.Build.0 = Debug|Any CPU
-		{A758F509-0620-4F4F-9EB7-6F4E66555C3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A758F509-0620-4F4F-9EB7-6F4E66555C3B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A758F509-0620-4F4F-9EB7-6F4E66555C3B}.Release|x86.ActiveCfg = Release|Any CPU
-		{A758F509-0620-4F4F-9EB7-6F4E66555C3B}.Release|x86.Build.0 = Release|Any CPU
 		{3808E6E7-BAD5-4C11-A6B2-8B958D42E084}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3808E6E7-BAD5-4C11-A6B2-8B958D42E084}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3808E6E7-BAD5-4C11-A6B2-8B958D42E084}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -31,6 +23,14 @@ Global
 		{3808E6E7-BAD5-4C11-A6B2-8B958D42E084}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3808E6E7-BAD5-4C11-A6B2-8B958D42E084}.Release|x86.ActiveCfg = Release|Any CPU
 		{3808E6E7-BAD5-4C11-A6B2-8B958D42E084}.Release|x86.Build.0 = Release|Any CPU
+		{D35ECA4F-FC15-4538-9525-ADD034538A9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D35ECA4F-FC15-4538-9525-ADD034538A9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D35ECA4F-FC15-4538-9525-ADD034538A9B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D35ECA4F-FC15-4538-9525-ADD034538A9B}.Debug|x86.Build.0 = Debug|Any CPU
+		{D35ECA4F-FC15-4538-9525-ADD034538A9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D35ECA4F-FC15-4538-9525-ADD034538A9B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D35ECA4F-FC15-4538-9525-ADD034538A9B}.Release|x86.ActiveCfg = Release|Any CPU
+		{D35ECA4F-FC15-4538-9525-ADD034538A9B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

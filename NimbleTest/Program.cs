@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,58 +26,73 @@ namespace NimbleTest
 			}
 
 			Console.WriteLine($"Running server in \"{Environment.CurrentDirectory}\"");
-
+			
 			NimbleApp app = new NimbleApp(80)
 			{
 				defaultContentType = "application/json",
 				onInitializeRequest = (context) =>
 				{
 					Console.WriteLine(context.request.Url.AbsolutePath);
-				},
+				}
+			};
+
+			app.rootRouter = new Router("/")
+			{
 				onRouteVariableValidationException = (exception) =>
 				{
 					exception.context.statusCode = System.Net.HttpStatusCode.BadRequest;
 					exception.context.Clear();
 					exception.context.Write(JsonConvert.SerializeObject(new { error = exception.Message }));
-				}
-			};
-
-			var rootRoute = new Router("/")
-			{
+				},
 				onExecute = (context) =>
 				{
 					context.response.ContentType = "text/html";
 					context.Write("<h3>Hello</h3>");
-				}
-			};
-			app.routers.Add(rootRoute);
-			
-			var faviconRoute = new Router("/favicon.ico")
-			{
-				onExecute = (context) =>
+				},
+				subRouters =
 				{
-					context.ServeStaticFile(context.request.Url.AbsolutePath);
-				}
-			};
-			app.routers.Add(faviconRoute);
-
-			var idRoute = new Router("/{id}")
-			{
-				onExecute = (context) =>
-				{
-					int id = context.GetRouteVariable<int>("id");
-
-					var myPacket = new
+					new Router("favicon.ico")
 					{
-						id = id,
-						name = "Keen",
-						time = DateTime.Now
-					};
-					context.Write(JsonConvert.SerializeObject(myPacket));
-					
+						onExecute = (context) =>
+						{
+							context.ServeStaticFile(context.request.Url.AbsolutePath);
+						}
+					},
+					new Router("{id}")
+					{
+						onExecute = (context) =>
+						{
+							int id = context.GetRouteVariable<int>("id");
+
+							var myPacket = new
+							{
+								id = id,
+								time = DateTime.Now
+							};
+							context.Write(JsonConvert.SerializeObject(myPacket));
+						},
+						subRouters =
+						{
+							new Router("{name}")
+							{
+								onExecute = (context) =>
+								{
+									int id = context.GetRouteVariable<int>("id");
+									string name = context.GetRouteVariable("name");
+
+									var myPacket = new
+									{
+										id = id,
+										name = name,
+										time = DateTime.Now
+									};
+									context.Write(JsonConvert.SerializeObject(myPacket));
+								}
+							}
+						}
+					}
 				}
 			};
-			app.routers.Add(idRoute);
 
 			app.Start();
 
