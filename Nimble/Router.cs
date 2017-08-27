@@ -60,8 +60,9 @@ namespace Nimble
 
 		
 
-		public Router(string urlPattern) : this(urlPattern, null)
+		public Router(string urlPattern)
 		{
+			this.urlPattern = urlPattern;
 			subRouters.CollectionChanged += OnSubRoutersChanged;
 		}
 
@@ -88,12 +89,6 @@ namespace Nimble
 					}
 				}
 			}
-		}
-
-		public Router(string urlPattern, OnExecuteDelegate onExecute)
-		{
-			this.urlPattern = urlPattern;
-			this.onExecute = onExecute;
 		}
 
 		public bool Evaluate(RequestContext context)
@@ -188,6 +183,7 @@ namespace Nimble
 			try
 			{
 				onExecute?.Invoke(context);
+				OnExecute(context);
 			}
 			catch (RouteVariableValidationException exception)
 			{
@@ -201,6 +197,11 @@ namespace Nimble
 				}
 			}
 			context.currentRouter = previousRouter;
+		}
+
+		protected virtual void OnExecute(RequestContext context)
+		{
+			
 		}
 	}
 }
