@@ -37,7 +37,12 @@ namespace Nimble
 				}
 				_urlPattern = value;
 
-				string escapedPattern = Regex.Escape(_urlPattern);
+				string escapedPattern = _urlPattern;
+				if (escapedPattern.EndsWith("/"))
+				{
+					escapedPattern = escapedPattern.Substring(0, escapedPattern.Length-1);
+				}
+				escapedPattern = Regex.Escape(escapedPattern);
 
 				groupNames.Clear();
 				regexPattern = Regex.Replace(escapedPattern, "\\\\{([a-zA-Z0-9_]*)\\}", (m) => {
@@ -45,7 +50,7 @@ namespace Nimble
 					groupNames.Add(groupName);
 					return $"(?<{groupName}>[^/]+)";
 				});
-				regexPattern = $"^{regexPattern}/?";
+				regexPattern = $"^{regexPattern}/*";
 			}
 		}
 		private string regexPattern;
@@ -53,8 +58,8 @@ namespace Nimble
 
 
 
-		public delegate void OnRouteVariableValidationExceptionDelegate(RouteVariableValidationException exception);
-		public OnRouteVariableValidationExceptionDelegate onRouteVariableValidationException { get; set; }
+		public delegate void OnRouteVariableExceptionDelegate(RouteVariableValidationException exception);
+		public OnRouteVariableExceptionDelegate onRouteVariableException { get; set; }
 
 		public delegate void OnExecuteDelegate(RequestContext context);
 		public OnExecuteDelegate onExecute;
@@ -118,11 +123,18 @@ namespace Nimble
 				}
 
 				bool isFullMatch = match.Length == path.Length;
+				string remainingPath = path.Substring(match.Length);
+				if (!isFullMatch)
+				{
+					if (remainingPath == "/")
+					{
+						remainingPath = "";
+						isFullMatch = true;
+					}
+				}
 
 				if (!isFullMatch)
 				{
-					string remainingPath = path.Substring(match.Length);
-
 					foreach (var subRouter in subRouters)
 					{
 						bool result = subRouter.Evaluate(context, remainingPath);
@@ -141,9 +153,9 @@ namespace Nimble
 					}
 					catch (RouteVariableValidationException exception)
 					{
-						if (onRouteVariableValidationException != null)
+						if (onRouteVariableException != null)
 						{
-							onRouteVariableValidationException?.Invoke(exception);
+							onRouteVariableException?.Invoke(exception);
 						}
 						else
 						{
@@ -161,10 +173,10 @@ namespace Nimble
 		public void Execute(RequestContext context)
 		{
 			Router currentRouter = this;
-			OnRouteVariableValidationExceptionDelegate onRouteVariableValidationException = null;
-			while (currentRouter != null && onRouteVariableValidationException == null)
+			OnRouteVariableExceptionDelegate onRouteVariableException = null;
+			while (currentRouter != null && onRouteVariableException == null)
 			{
-				onRouteVariableValidationException = currentRouter.onRouteVariableValidationException;
+				onRouteVariableException = currentRouter.onRouteVariableException;
 				currentRouter = currentRouter.parent;
 			}
 
@@ -176,9 +188,9 @@ namespace Nimble
 			}
 			catch (RouteVariableValidationException exception)
 			{
-				if (onRouteVariableValidationException != null)
+				if (onRouteVariableException != null)
 				{
-					onRouteVariableValidationException?.Invoke(exception);
+					onRouteVariableException?.Invoke(exception);
 				}
 				else
 				{

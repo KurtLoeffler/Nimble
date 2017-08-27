@@ -26,7 +26,10 @@ namespace Nimble
 				return cancellationTokenSource != null;
 			}
 		}
-		
+
+		public int concurrentConnections { get; private set; }
+		public int concurrentThreads { get; private set; }
+
 		private CancellationTokenSource cancellationTokenSource;
 		private HttpListener httpListener;
 
@@ -67,16 +70,36 @@ namespace Nimble
 			httpListener.Prefixes.Add($"http://{domainPattern}:{port.ToString()}/");
 			httpListener.Start();
 
+			concurrentConnections = 0;
+			concurrentThreads = 0;
+
 			while (true)
 			{
 				try
 				{
 					HttpListenerContext context = httpListener.GetContext();
 
+					lock (this)
+					{
+						concurrentConnections++;
+					}
+					//Console.WriteLine("Begin "+concurrentConnections+" "+concurrentThreads);
+
 					Task.Run(() => {
+						lock (this)
+						{
+							concurrentThreads++;
+						}
 						onHttpRequest?.Invoke(context);
 						context.Response.Close();
+						lock (this)
+						{
+							concurrentConnections--;
+							concurrentThreads--;
+							//Console.WriteLine("End "+concurrentConnections+" "+concurrentThreads);
+						}
 					});
+					
 				}
 				catch (HttpListenerException)
 				{
@@ -88,6 +111,9 @@ namespace Nimble
 					break;
 				}
 			}
+
+			concurrentConnections = 0;
+			concurrentThreads = 0;
 		}
 	}
 }

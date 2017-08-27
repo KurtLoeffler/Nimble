@@ -167,7 +167,11 @@ namespace Nimble
 			}
 			hasBeenCommitted = true;
 			response.ContentLength64 += responseStream.Length;
-			responseStream.WriteTo(response.OutputStream);
+			try
+			{
+				responseStream.WriteTo(response.OutputStream);
+			}
+			catch (HttpListenerException) { }
 			response.OutputStream.Flush();
 		}
 
@@ -186,17 +190,27 @@ namespace Nimble
 			}
 		}
 
-		public void ServeStaticFile(string filePath, string cacheControl = null)
-		{
-			ServeStaticFile(filePath, StaticFileSettings.defaultSettings, cacheControl);
-		}
-
-		void ServeStaticFile(string filePath, StaticFileSettings staticFileSettings, string cacheControl = null)
+		public void ServeStaticFile(string filePath = null, StaticFileSettings staticFileSettings = null, string cacheControl = null)
 		{
 			hasBeenCommitted = true;
+
+			if (filePath == null)
+			{
+				filePath = request.Url.AbsolutePath;
+			}
+
+			if (staticFileSettings == null)
+			{
+				staticFileSettings = StaticFileSettings.defaultSettings;
+			}
+
 			if (filePath.StartsWith("/"))
 			{
 				filePath = filePath.Substring(1);
+			}
+			if (filePath.EndsWith("/"))
+			{
+				filePath = filePath.Substring(0, filePath.Length-1);
 			}
 
 			string fullAppPath = Path.GetFullPath(Environment.CurrentDirectory);

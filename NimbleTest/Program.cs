@@ -4,6 +4,7 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -25,20 +26,29 @@ namespace NimbleTest
 				}
 			}
 
+			//int minWorker, minIOC;
+			//ThreadPool.GetMinThreads(out minWorker, out minIOC);
+			//ThreadPool.SetMinThreads(30, minIOC);
+
 			Console.WriteLine($"Running server in \"{Environment.CurrentDirectory}\"");
-			
-			NimbleApp app = new NimbleApp(80)
+
+			NimbleApp app = null;
+			app = new NimbleApp(80)
 			{
 				defaultContentType = "application/json",
 				onInitializeRequest = (context) =>
 				{
-					Console.WriteLine(context.request.Url.AbsolutePath);
+					Console.WriteLine($"{context.request.Url.AbsolutePath}");
+				},
+				onFinalizeRequest = (context) =>
+				{
+					Console.WriteLine($"done {app.server.concurrentConnections} connections {app.server.concurrentThreads} threads.");
 				}
 			};
 
 			app.rootRouter = new Router("/")
 			{
-				onRouteVariableValidationException = (exception) =>
+				onRouteVariableException = (exception) =>
 				{
 					exception.context.statusCode = System.Net.HttpStatusCode.BadRequest;
 					exception.context.Clear();
@@ -55,7 +65,14 @@ namespace NimbleTest
 					{
 						onExecute = (context) =>
 						{
-							context.ServeStaticFile(context.request.Url.AbsolutePath);
+							context.ServeStaticFile();
+						}
+					},
+					new Router("loaderio-f20d53b48da411ef71d7b647d008884f.txt")
+					{
+						onExecute = (context) =>
+						{
+							context.ServeStaticFile();
 						}
 					},
 					new Router("{id}")
@@ -86,7 +103,10 @@ namespace NimbleTest
 										name = name,
 										time = DateTime.Now
 									};
-									context.Write(JsonConvert.SerializeObject(myPacket));
+
+									string json = JsonConvert.SerializeObject(myPacket);
+									context.Write(json);
+									//System.Threading.Thread.Sleep(100);
 								}
 							}
 						}
