@@ -34,18 +34,43 @@ namespace Nimble
 
 		public void Start()
 		{
+			OnBeforeStart();
 			server.Start();
+			OnAfterStart();
+		}
+
+		protected virtual void OnBeforeStart()
+		{
+
+		}
+
+		protected virtual void OnAfterStart()
+		{
+
 		}
 
 		public void Stop()
 		{
+			OnBeforeStop();
 			server.Stop();
+			OnAfterStop();
+		}
+
+		protected virtual void OnBeforeStop()
+		{
+
+		}
+
+		protected virtual void OnAfterStop()
+		{
+
 		}
 
 		private void OnHttpRequest(HttpListenerContext httpListenerContext)
 		{
 			RequestContext context = new RequestContext(this, httpListenerContext);
-			
+
+			OnInitializeRequest(context);
 			onInitializeRequest?.Invoke(context);
 
 			if (rootRouter != null)
@@ -54,9 +79,20 @@ namespace Nimble
 				rootRouter.Evaluate(context, path);
 			}
 
+			OnFinalizeRequest(context);
 			onFinalizeRequest?.Invoke(context);
 
 			context.Commit();
+		}
+
+		protected virtual void OnInitializeRequest(RequestContext context)
+		{
+
+		}
+
+		protected virtual void OnFinalizeRequest(RequestContext context)
+		{
+
 		}
 	}
 }
