@@ -9,15 +9,6 @@ using System.Collections.Specialized;
 
 namespace Nimble
 {
-	public class RouterList : List<Router>
-	{
-		public new void Add(Router router)
-		{
-			Console.WriteLine("ADD");
-			base.Add(router);
-		}
-	}
-
 	public class Router
 	{
 		public Router parent { get; private set; }
