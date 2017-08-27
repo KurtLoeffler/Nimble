@@ -35,18 +35,19 @@ namespace Nimble
 				}
 				escapedPattern = Regex.Escape(escapedPattern);
 
-				groupNames.Clear();
-				regexPattern = Regex.Replace(escapedPattern, "\\\\{([a-zA-Z0-9_]*)\\}", (m) => {
+				regexPattern = Regex.Replace(escapedPattern, "<([a-zA-Z0-9_]*)>", (m) => {
 					string groupName = m.Groups[1].Value;
-					groupNames.Add(groupName);
+					return $"(?<{groupName}>.+)";
+				});
+				regexPattern = Regex.Replace(regexPattern, "\\\\\\{([a-zA-Z0-9_]*)\\}", (m) => {
+					string groupName = m.Groups[1].Value;
 					return $"(?<{groupName}>[^/]+)";
 				});
+				
 				regexPattern = $"^{regexPattern}/*";
 			}
 		}
 		private string regexPattern;
-		private List<string> groupNames = new List<string>();
-
 
 
 		public delegate void OnRouteVariableExceptionDelegate(RouteVariableValidationException exception);
@@ -95,26 +96,32 @@ namespace Nimble
 			this.onExecute = onExecute;
 		}
 
-		public bool Evaluate(RequestContext context, string path)
+		public bool Evaluate(RequestContext context)
 		{
-			Match match = Regex.Match(path, regexPattern, RegexOptions.Singleline);
+			Regex regex = new Regex(regexPattern, RegexOptions.Singleline);
+			Match match = regex.Match(context.remainingPath);
 
 			if (match.Success)
 			{
-				if (match.Groups.Count != groupNames.Count+1)
+				string[] groupNames = regex.GetGroupNames();
+				if (match.Groups.Count != groupNames.Length)
 				{
 					throw new Exception("Unexpected group count.");
 				}
-
-				for (int i = 1; i < match.Groups.Count; i++)
+				for (int i = 0; i < match.Groups.Count; i++)
 				{
+					string groupName = groupNames[i];
+					if (int.TryParse(groupName, out int _))
+					{
+						continue;
+					}
 					Group group = match.Groups[i];
-					string groupName = groupNames[i-1];
+					
 					context.SetRouteVariable(groupName, group.Value);
 				}
 
-				bool isFullMatch = match.Length == path.Length;
-				string remainingPath = path.Substring(match.Length);
+				bool isFullMatch = match.Length == context.remainingPath.Length;
+				string remainingPath = context.remainingPath.Substring(match.Length);
 				if (!isFullMatch)
 				{
 					if (remainingPath == "/")
@@ -126,9 +133,14 @@ namespace Nimble
 
 				if (!isFullMatch)
 				{
+					
 					foreach (var subRouter in subRouters)
 					{
-						bool result = subRouter.Evaluate(context, remainingPath);
+						string previousRemainingPath = context.remainingPath;
+						context.remainingPath = remainingPath;
+						bool result = subRouter.Evaluate(context);
+						context.remainingPath = previousRemainingPath;
+						
 						if (result)
 						{
 							return true;

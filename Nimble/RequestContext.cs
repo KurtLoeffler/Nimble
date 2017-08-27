@@ -14,6 +14,7 @@ namespace Nimble
 		public bool hasBeenCommitted { get; private set; }
 		
 		public Router currentRouter { get; internal set; }
+		public string remainingPath { get; internal set; }
 
 		/// <summary>
 		/// The internal <see cref="HttpListenerContext"/> for this request.
@@ -65,6 +66,7 @@ namespace Nimble
 		{
 			this.app = app;
 			this.httpContext = httpContext;
+			remainingPath = request.Url.AbsolutePath;
 
 			if (app.defaultContentType != null)
 			{
@@ -190,7 +192,7 @@ namespace Nimble
 			}
 		}
 
-		public void ServeStaticFile(string filePath = null, StaticFileSettings staticFileSettings = null, string cacheControl = null)
+		public void ServeStaticFile(string filePath = null, StaticFileSettings staticFileSettings = null, bool forceSaveFile = false, string cacheControl = null)
 		{
 			hasBeenCommitted = true;
 
@@ -237,7 +239,11 @@ namespace Nimble
 					{
 						response.AddHeader("cache-control", cacheControl);
 					}
-					response.AddHeader("Content-disposition", $"attachment; filename={filename}");
+
+					if (forceSaveFile)
+					{
+						response.AddHeader("Content-disposition", $"attachment; filename={filename}");
+					}
 					
 					byte[] buffer = new byte[64 * 1024];
 					int read;

@@ -69,14 +69,14 @@ namespace Nimble
 		private void OnHttpRequest(HttpListenerContext httpListenerContext)
 		{
 			RequestContext context = new RequestContext(this, httpListenerContext);
-
+			
 			OnInitializeRequest(context);
 			onInitializeRequest?.Invoke(context);
 
 			if (rootRouter != null)
 			{
 				string path = context.request.Url.AbsolutePath;
-				rootRouter.Evaluate(context, path);
+				rootRouter.Evaluate(context);
 			}
 
 			OnFinalizeRequest(context);
