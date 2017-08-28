@@ -249,11 +249,15 @@ namespace Nimble
 					int read;
 					using (BinaryWriter binaryWriter = new BinaryWriter(response.OutputStream))
 					{
-						while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+						try
 						{
-							binaryWriter.Write(buffer, 0, read);
-							binaryWriter.Flush();
+							while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+							{
+								binaryWriter.Write(buffer, 0, read);
+								binaryWriter.Flush();
+							}
 						}
+						catch (HttpListenerException) { }
 					}
 				}
 			}

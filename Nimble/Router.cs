@@ -147,7 +147,10 @@ namespace Nimble
 				{
 					try
 					{
-						Execute(context);
+						if (!TryExecute(context))
+						{
+							return false;
+						}
 					}
 					catch (RouteVariableValidationException exception)
 					{
@@ -168,7 +171,7 @@ namespace Nimble
 			return false;
 		}
 
-		public void Execute(RequestContext context)
+		private bool TryExecute(RequestContext context)
 		{
 			Router currentRouter = this;
 			OnRouteVariableExceptionDelegate onRouteVariableException = null;
@@ -178,12 +181,20 @@ namespace Nimble
 				currentRouter = currentRouter.parent;
 			}
 
+			bool resultState = true;
 			Router previousRouter = context.currentRouter;
 			context.currentRouter = this;
 			try
 			{
-				onExecute?.Invoke(context);
-				OnExecute(context);
+				if (OnValidate(context))
+				{
+					onExecute?.Invoke(context);
+					OnExecute(context);
+				}
+				else
+				{
+					resultState = false;
+				}
 			}
 			catch (RouteVariableValidationException exception)
 			{
@@ -197,6 +208,13 @@ namespace Nimble
 				}
 			}
 			context.currentRouter = previousRouter;
+
+			return resultState;
+		}
+
+		public virtual bool OnValidate(RequestContext context)
+		{
+			return true;
 		}
 
 		protected virtual void OnExecute(RequestContext context)

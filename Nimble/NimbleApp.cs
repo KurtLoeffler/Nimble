@@ -76,7 +76,10 @@ namespace Nimble
 			if (rootRouter != null)
 			{
 				string path = context.request.Url.AbsolutePath;
-				rootRouter.Evaluate(context);
+				if (!rootRouter.Evaluate(context))
+				{
+					OnRouteNotFound(context);
+				}
 			}
 
 			OnFinalizeRequest(context);
@@ -93,6 +96,11 @@ namespace Nimble
 		protected virtual void OnFinalizeRequest(RequestContext context)
 		{
 
+		}
+
+		protected virtual void OnRouteNotFound(RequestContext context)
+		{
+			context.statusCode = HttpStatusCode.NotFound;
 		}
 	}
 }

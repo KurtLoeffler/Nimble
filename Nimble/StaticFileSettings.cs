@@ -10,13 +10,6 @@ namespace Nimble
 	{
 		public static StaticFileSettings defaultSettings { get; private set; }
 
-		public List<string> indexFiles { get; private set; } = new List<string>() {
-			"index.html",
-			"index.htm",
-			"default.html",
-			"default.htm"
-		};
-
 		public static IDictionary<string, string> contentTypeMappings { get; private set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase) {
 			{".asf", "video/x-ms-asf"},
 			{".asx", "video/x-ms-asf"},

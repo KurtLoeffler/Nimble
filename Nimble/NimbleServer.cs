@@ -45,6 +45,19 @@ namespace Nimble
 			{
 				throw new Exception($"{nameof(NimbleServer)} already started.");
 			}
+
+			httpListener = new HttpListener();
+			httpListener.Prefixes.Add($"http://{domainPattern}:{port.ToString()}/");
+			try
+			{
+				httpListener.Start();
+			}
+			catch (HttpListenerException)
+			{
+				Console.WriteLine($"Error starting {nameof(HttpListener)}. On windows the process must be run with admin privileges.");
+				throw;
+			}
+
 			cancellationTokenSource = new CancellationTokenSource();
 			Task.Run(() => Listen(cancellationTokenSource.Token), cancellationTokenSource.Token);
 		}
@@ -66,10 +79,6 @@ namespace Nimble
 
 		private void Listen(CancellationToken cancellationToken)
 		{
-			httpListener = new HttpListener();
-			httpListener.Prefixes.Add($"http://{domainPattern}:{port.ToString()}/");
-			httpListener.Start();
-
 			concurrentConnections = 0;
 			concurrentThreads = 0;
 
